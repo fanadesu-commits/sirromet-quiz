@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sirromet ワイン診断</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #0d1f0a 0%, #1a3a10 35%, #0a1a20 70%, #051015 100%);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    color: #f0f7e8;
+  }
+  .wrap { width: 100%; max-width: 520px; position: relative; z-index: 1; }
+
+  .bg1 { position: fixed; top: -120px; right: -120px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(255,200,50,0.06) 0%, transparent 70%); pointer-events: none; }
+  .bg2 { position: fixed; bottom: -80px; left: -80px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(30,120,80,0.12) 0%, transparent 70%); pointer-events: none; }
+
+  .screen { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+  /* START */
+  .start { text-align: center; }
+  .start .emoji { font-size: 60px; margin-bottom: 10px; }
+  .start .label { color: #7ecba1; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
+  .start h1 { font-size: 28px; font-weight: normal; line-height: 1.3; margin-bottom: 10px; }
+  .start p { color: #8ab89a; font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+  .steps { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; }
+  .step-box { text-align: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(100,200,130,0.15); border-radius: 14px; padding: 14px 16px; min-width: 90px; }
+  .step-box .icon { font-size: 22px; }
+  .step-box .slabel { color: #7ecba1; font-size: 11px; margin-top: 6px; display: block; }
+  .step-box .snum { color: #4ab870; font-size: 12px; font-weight: bold; display: block; }
+  .note-sm { color: #456a52; font-size: 12px; margin-top: 14px; }
+
+  /* PROGRESS */
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .progress-top span:first-child { color: #7ecba1; font-size: 12px; }
+  .progress-top span:last-child { color: #4ab870; font-size: 12px; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,#2d8a50,#4ab870); border-radius: 4px; transition: width 0.4s ease; }
+  .progress-dots { display: flex; gap: 4px; margin-top: 6px; }
+  .progress-dots span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); transition: background 0.3s; }
+  .progress-dots span.done { background: #4ab870; }
+
+  /* CARD */
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(100,200,130,0.18); border-radius: 20px; padding: 26px; }
+  .badge { display: inline-block; border-radius: 20px; padding: 3px 12px; font-size: 11px; letter-spacing: 1px; margin-bottom: 12px; }
+  .badge.green { background: rgba(74,184,112,0.12); color: #7ecba1; border: 1px solid rgba(74,184,112,0.25); }
+  .badge.yellow { background: rgba(255,200,50,0.12); color: #f0c040; border: 1px solid rgba(255,200,50,0.25); }
+  .card h2 { font-size: 20px; font-weight: normal; margin-bottom: 12px; line-height: 1.45; }
+  .tip { background: rgba(255,200,50,0.07); border: 1px solid rgba(255,200,50,0.18); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; color: #c8b870; font-size: 13px; line-height: 1.65; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn { background: rgba(255,255,255,0.03); border: 1.5px solid rgba(100,200,130,0.12); border-radius: 12px; padding: 13px 16px; color: #8ab89a; font-size: 15px; font-family: inherit; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+  .opt-btn:hover { background: rgba(74,184,112,0.08); border-color: rgba(74,184,112,0.3); }
+  .opt-btn.selected { background: rgba(74,184,112,0.18); border-color: #4ab870; color: #f0f7e8; }
+  .check { color: #4ab870; }
+  .fact-box { background: rgba(74,184,112,0.1); border: 1px solid rgba(74,184,112,0.25); border-radius: 14px; padding: 16px; color: #a8dab5; font-size: 15px; line-height: 1.7; animation: fadeIn 0.4s ease; }
+  .btn-row { margin-top: 18px; text-align: right; }
+
+  /* BUTTONS */
+  .btn-primary { background: linear-gradient(135deg,#2d8a50,#4ab870); color: #fff; border: none; border-radius: 50px; padding: 13px 34px; font-size: 15px; font-family: inherit; font-weight: bold; cursor: pointer; box-shadow: 0 4px 18px rgba(74,184,112,0.3); transition: transform 0.2s; }
+  .btn-primary:hover { transform: scale(1.03); }
+  .btn-primary:disabled { background: rgba(255,255,255,0.06); color: #3a5a45; cursor: not-allowed; box-shadow: none; transform: none; }
+  .btn-ghost { background: transparent; border: 1.5px solid rgba(74,184,112,0.3); border-radius: 50px; padding: 12px 22px; color: #7ecba1; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+  .btn-ghost:hover { border-color: #4ab870; color: #f0f7e8; }
+  .btn-ta { background: linear-gradient(135deg,#34b78d,#1a9e78); color: #fff; border: none; border-radius: 50px; padding: 13px 28px; font-size: 14px; font-family: inherit; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; box-shadow: 0 4px 16px rgba(52,183,141,0.35); transition: transform 0.2s; }
+  .btn-ta:hover { transform: scale(1.03); }
+  .btn-buy { background: linear-gradient(135deg,#2d8a50,#4ab870); color: #fff; border: none; border-radius: 50px; padding: 12px 22px; font-size: 14px; font-family: inherit; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; box-shadow: 0 4px 16px rgba(74,184,112,0.3); transition: transform 0.2s; }
+  .btn-buy:hover { transform: scale(1.03); }
+
+  /* RESULT */
+  .result-header { text-align: center; margin-bottom: 16px; }
+  .result-header .sublabel { color: #7ecba1; font-size: 11px; letter-spacing: 4px; margin-bottom: 6px; }
+  .result-header h2 { font-size: 20px; font-weight: normal; }
+  .wine-card { border-radius: 24px; overflow: hidden; margin-bottom: 16px; background: rgba(255,255,255,0.04); }
+  .bottle-area { display: flex; align-items: center; justify-content: center; padding: 28px 20px 20px; position: relative; min-height: 200px; }
+  .bottle-grad { position: absolute; bottom:0; left:0; right:0; height:50px; background: linear-gradient(to top, rgba(5,16,21,0.8), transparent); z-index:1; }
+  .bottle-area svg { position: relative; z-index: 2; filter: drop-shadow(0 12px 28px rgba(0,0,0,0.55)); }
+  .wine-info { padding: 18px 22px 22px; }
+  .wine-type { color: #7ecba1; font-size: 11px; letter-spacing: 2px; margin-bottom: 6px; }
+  .wine-name { font-size: 20px; font-weight: normal; margin-bottom: 10px; line-height: 1.3; }
+  .wine-copy { background: rgba(74,184,112,0.08); border: 1px solid rgba(74,184,112,0.2); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; color: #a8dab5; font-size: 14px; line-height: 1.75; font-style: italic; }
+  .wine-desc { color: #7a9e84; font-size: 13px; line-height: 1.7; margin-bottom: 14px; }
+  .wine-price { display: inline-block; background: rgba(74,184,112,0.12); border: 1px solid rgba(74,184,112,0.25); border-radius: 20px; padding: 5px 16px; color: #4ab870; font-size: 14px; font-weight: bold; }
+
+  /* TripAdvisor CTA */
+  .ta-cta { background: rgba(255,255,255,0.04); border: 1px solid rgba(52,183,141,0.3); border-radius: 18px; padding: 20px 22px; margin-bottom: 14px; text-align: center; }
+  .ta-cta .ta-icon { font-size: 26px; margin-bottom: 8px; }
+  .ta-cta .ta-title { font-size: 15px; font-weight: bold; margin-bottom: 4px; }
+  .ta-cta .ta-discount { color: #4ab870; font-size: 22px; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; }
+  .ta-cta .ta-note { color: #8ab89a; font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
+
+  /* Discount badge */
+  .discount-badge { background: linear-gradient(135deg, rgba(74,184,112,0.12), rgba(52,183,141,0.08)); border: 1.5px solid rgba(74,184,112,0.35); border-radius: 18px; padding: 18px 22px; margin-bottom: 14px; text-align: center; }
+  .discount-badge .db-note { color: #a8dab5; font-size: 12px; letter-spacing: 1px; margin-bottom: 6px; }
+  .discount-badge .db-num { font-size: 28px; font-weight: bold; letter-spacing: 2px; }
+  .discount-badge .db-sub { color: #7ecba1; font-size: 12px; margin-top: 6px; }
+
+  .btn-row-center { display: flex; gap: 12px; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="bg1"></div>
+<div class="bg2"></div>
+<div class="wrap" id="app"></div>
+
+<script>
+const VELTRA_URL = "https://www.veltra.com/jp/oceania/australia/gold_coast/a/20698";
+const GOOGLE_URL = "https://search.google.com/local/writereview?placeid=ChIJm7KdnqpakWsRkMH3DlhAlog";
+
+const wines = [
+  { id:1, name:"Seven Scenes Cuvée Blanc", type:"Sparkling White", bottleColor:"#3a6b3a", labelColor:"#2a8a5a", labelText:["Seven Scenes","Cuvée","Blanc"], catchcopy:"Queensland の風が泡になった。波打ち際で、グラスを傾けて。", description:"フレッシュな柑橘とピーチの香り。爽やかな泡が軽やかに広がる、毎日飲みたいスパークリング。", tags:{sweet:3,bold:1,tannic:1,oaked:1,light:5,social:5}, price:"$28", url:"https://www.sirromet.com/ja/collections/all-wines/products/seven-scenes-nv-cuvee-blanc-750ml", accent:"#7ecba1", sparkling:true },
+  { id:2, name:"Seven Scenes Cuvée Rosé", type:"Sparkling Rosé", bottleColor:"#8b4060", labelColor:"#c06080", labelText:["Seven Scenes","Cuvée","Rosé"], catchcopy:"サンセットビーチに似合う、あの色。泡とともに、特別な夜へ。", description:"バラの花びらとフルーツの繊細な香り。華やかで愛らしい、特別な日に飲みたい一本。", tags:{sweet:4,bold:2,tannic:1,oaked:1,light:4,social:5}, price:"$28", url:"https://www.sirromet.com/ja/collections/all-wines/products/seven-scenes-cuvee-rose-750ml", accent:"#f7a8c0", sparkling:true },
+  { id:3, name:"2024 Seven Scenes Sauvignon Blanc", type:"White", bottleColor:"#2a5a2a", labelColor:"#3a8a4a", labelText:["Seven Scenes","Sauvignon","Blanc"], catchcopy:"Granite Belt の朝の空気を、そのままグラスに注いだような一杯。", description:"グースベリーと青草のフレッシュな香り。キリッとした酸味が爽快な辛口白ワイン。", tags:{sweet:1,bold:2,tannic:1,oaked:1,light:5,social:3}, price:"$25", url:"https://www.sirromet.com/ja/collections/all-wines/products/2024-seven-scenes-sauvignon-blanc-750ml", accent:"#a8d8a8" },
+  { id:4, name:"2024 Seven Scenes Pinot Grigio", type:"White", bottleColor:"#4a6a20", labelColor:"#6a9a30", labelText:["Seven Scenes","Pinot","Grigio"], catchcopy:"Brisbane の青空の下、テラスで飲む一杯みたいに、軽やかに。", description:"青リンゴとレモンのすっきりした味わい。料理を選ばず、毎日の食事に寄り添う白。", tags:{sweet:2,bold:1,tannic:1,oaked:1,light:5,social:4}, price:"$25", url:"https://www.sirromet.com/ja/collections/all-wines/products/2022-seven-scenes-pinot-grigio", accent:"#c8e088" },
+  { id:5, name:"2024 granit Fiano", type:"White", bottleColor:"#5a5a1a", labelColor:"#8a8a30", labelText:["granit","Fiano","2024"], catchcopy:"大地の香りを纏った、個性派。Granite Belt が育てたイタリアの魂。", description:"白グレープフルーツとハーブの香り。イタリア品種ならではのエレガントな個性派白ワイン。", tags:{sweet:2,bold:3,tannic:1,oaked:2,light:4,social:3}, price:"$28", url:"https://www.sirromet.com/ja/collections/all-wines/products/2024-granit-fiano", accent:"#d4c870" },
+  { id:6, name:"2024 granit Vermentino", type:"White", bottleColor:"#1a5a3a", labelColor:"#2a8a5a", labelText:["granit","Vermentino","2024"], catchcopy:"岩と風と太陽。Queensland の地中海に、乾杯。", description:"レモンとミネラルのクリスプな辛口。地中海を感じるフレッシュで個性的な一本。", tags:{sweet:1,bold:2,tannic:1,oaked:1,light:5,social:3}, price:"$28", url:"https://www.sirromet.com/ja/collections/all-wines/products/2024-granit-vermentino", accent:"#80c8a0" },
+  { id:7, name:"2025 Seven Scenes Rosé", type:"Rosé", bottleColor:"#7a3050", labelColor:"#b05070", labelText:["Seven Scenes","Rosé","2025"], catchcopy:"Gold Coast の夕暮れ色。砂浜で飲む、最高の一杯がここに。", description:"チルした夏の午後にぴったり。いちごとスイカのような軽やかなロゼ。", tags:{sweet:3,bold:2,tannic:1,oaked:1,light:4,social:5}, price:"$28", url:"https://www.sirromet.com/ja/collections/all-wines/products/2025-seven-scenes-rose", accent:"#f0a0b8" },
+  { id:8, name:"2023 granit Lagrein", type:"Red", bottleColor:"#3a1a4a", labelColor:"#6a3a8a", labelText:["granit","Lagrein","2023"], catchcopy:"誰も知らないブドウで、誰も知らない感動を。冒険者のための一本。", description:"ダークチェリーとスパイスの個性的な香り。北イタリア原産の珍しいブドウ品種。", tags:{sweet:2,bold:4,tannic:3,oaked:2,light:2,social:2}, price:"$30", url:"https://www.sirromet.com/ja/collections/all-wines/products/2023-granit-lagrein", accent:"#b090d0" },
+  { id:9, name:"2024 granit Montepulciano", type:"Red", bottleColor:"#5a1a2a", labelColor:"#8a3a4a", labelText:["granit","Montepul-","ciano 2024"], catchcopy:"Granite Belt の赤土が育てた、イタリアンソウル。食卓を豊かにする一杯。", description:"チェリーとハーブの豊かな香り。イタリアン料理と相性抜群の飲みやすい赤。", tags:{sweet:2,bold:3,tannic:3,oaked:2,light:3,social:3}, price:"$30", url:"https://www.sirromet.com/ja/collections/all-wines/products/2024-granit-montepulciano", accent:"#d090a0" },
+  { id:10, name:"2023 The Edward Cabernet Shiraz", type:"Red", bottleColor:"#2a0a0a", labelColor:"#6a1a1a", labelText:["The Edward","Cab. Shiraz","2023"], catchcopy:"Queensland の太陽を、丸ごと飲み込んだような力強さ。本物を知る人への一本。", description:"ブラックベリーとスパイスの力強い風味。プレミアムな赤ワイン好きのための贅沢な一本。", tags:{sweet:1,bold:5,tannic:5,oaked:4,light:1,social:2}, price:"$60", url:"https://www.sirromet.com/ja/collections/all-wines/products/2023-the-edward-cabernet-shiraz", accent:"#e07060" },
+  { id:11, name:"2024 Signature Collection Cabernets", type:"Red", bottleColor:"#1a0a2a", labelColor:"#4a2a6a", labelText:["Signature","Cabernets","2024"], catchcopy:"Mount Cotton の丘の上で、夜風に揺れるグラス。これが Sirromet の誇り。", description:"カシスとダークチョコレートの複雑な味わい。Sirrometを代表する格調高い赤ワイン。", tags:{sweet:1,bold:5,tannic:4,oaked:4,light:1,social:2}, price:"$38", url:"https://www.sirromet.com/ja/collections/all-wines/products/2019-signature-collection-cabernets-copy", accent:"#c0a0e0" },
+  { id:12, name:"2019 Clone Mariafeld Pinot Noir", type:"Red", bottleColor:"#3a0a1a", labelColor:"#7a2a3a", labelText:["Mariafeld","Pinot Noir","2019"], catchcopy:"繊細さの中に、Granite Belt の奥深さ。静かな夜に、じっくりと味わいたい。", description:"繊細なイチゴとアースの香り。軽やかで上品、ワイン通を唸らせるピノ・ノワール。", tags:{sweet:2,bold:3,tannic:2,oaked:3,light:3,social:3}, price:"$55", url:"https://www.sirromet.com/ja/collections/all-wines/products/2019-clone-mariafeld-pinot-noir", accent:"#e090a8" },
+];
+
+const quizQs = [
+  { q:"Sirrometが創業したのはいつ？", note:"💡 Terry Morris氏がQueenslandにワインを根付かせる夢を持ってスタートしました。", opts:["1990年","1995年","2000年","2008年"], ans:2, fact:"2000年に創業！Terryさんがビクトリア州のディナーで「Queenslandにいいワインはない」と笑われたことが創業のきっかけです🍷" },
+  { q:"Sirrometのブドウ畑がある地域はどこ？", note:"💡 ワインの品質を支える重要な産地です。", opts:["Barossa Valley","Granite Belt","Hunter Valley","Yarra Valley"], ans:1, fact:"Granite Belt！標高600〜1500mの高地で育つブドウはゆっくり熟成し、複雑な風味が生まれます🌿" },
+  { q:"Sirrometが獲得した受賞数はおよそいくつ？", note:"💡 国内外で高い評価を受け続けています。", opts:["約100個","約300個","約600個","900個以上"], ans:3, fact:"なんと900個以上！Queenslandワインの可能性を世界に証明し続けています🏆" },
+];
+
+const diagQs = [
+  { q:"休日の理想の過ごし方は？", cat:"lifestyle", opts:[
+    {label:"🏖️ 友達とわいわいBBQ", s:{sweet:1,bold:1,tannic:0,oaked:0,light:1,social:3}},
+    {label:"📚 家でゆっくり読書・映画", s:{sweet:0,bold:1,tannic:1,oaked:2,light:0,social:0}},
+    {label:"🌿 自然の中でハイキング", s:{sweet:0,bold:0,tannic:0,oaked:0,light:2,social:1}},
+    {label:"✨ おしゃれなレストランでディナー", s:{sweet:1,bold:2,tannic:2,oaked:2,light:0,social:2}},
+  ]},
+  { q:"好きな食べ物は？", cat:"food", opts:[
+    {label:"🍣 お寿司・刺身", s:{sweet:0,bold:0,tannic:0,oaked:0,light:3,social:1}},
+    {label:"🍕 ピザ・パスタ", s:{sweet:1,bold:2,tannic:2,oaked:1,light:0,social:2}},
+    {label:"🥗 サラダ・野菜料理", s:{sweet:1,bold:0,tannic:0,oaked:0,light:2,social:1}},
+    {label:"🥩 ステーキ・BBQ肉", s:{sweet:0,bold:3,tannic:3,oaked:2,light:0,social:2}},
+  ]},
+  { q:"ワインの「甘口・辛口」、どっちが好き？", cat:"beginner", note:"💡 甘口＝甘みが感じられるワイン。辛口＝砂糖の甘さがなく、すっきりしたワイン。", opts:[
+    {label:"🍬 甘口が好き", s:{sweet:4,bold:0,tannic:0,oaked:0,light:2,social:1}},
+    {label:"🍋 どちらかというと辛口", s:{sweet:0,bold:1,tannic:1,oaked:1,light:2,social:1}},
+    {label:"💪 しっかり辛口", s:{sweet:0,bold:2,tannic:2,oaked:2,light:0,social:1}},
+    {label:"🤷 どちらでもOK", s:{sweet:1,bold:1,tannic:1,oaked:1,light:1,social:2}},
+  ]},
+  { q:"タンニンはどのくらい好き？", cat:"expert", note:"💡 タンニン＝赤ワインの渋み成分。口の中をギュッと引き締める感覚で、お茶の渋みに近いです。", opts:[
+    {label:"🌸 渋みは苦手", s:{sweet:2,bold:0,tannic:0,oaked:0,light:3,social:2}},
+    {label:"😊 少しあるくらいがいい", s:{sweet:1,bold:2,tannic:2,oaked:1,light:1,social:2}},
+    {label:"👊 しっかりした渋みが好き", s:{sweet:0,bold:3,tannic:5,oaked:3,light:0,social:1}},
+    {label:"🤔 よくわからない", s:{sweet:1,bold:1,tannic:1,oaked:1,light:2,social:2}},
+  ]},
+  { q:"今の気分に近いのは？", cat:"vibe", opts:[
+    {label:"🎉 テンション高め・お祝いモード", s:{sweet:2,bold:1,tannic:0,oaked:0,light:2,social:3}},
+    {label:"😌 ゆったり・リラックス", s:{sweet:1,bold:1,tannic:1,oaked:2,light:1,social:1}},
+    {label:"🔥 情熱的・パワフル", s:{sweet:0,bold:3,tannic:3,oaked:2,light:0,social:1}},
+    {label:"🌙 ロマンチック・センチメンタル", s:{sweet:2,bold:2,tannic:1,oaked:2,light:1,social:2}},
+  ]},
+];
+
+const catLabels = {expert:"🍷 ワイン用語あり",food:"🍽️ 食の好み",lifestyle:"☀️ ライフスタイル",beginner:"🌟 ワイン入門",vibe:"💭 気分・雰囲気"};
+
+function calcResult(answers) {
+  const t = {sweet:0,bold:0,tannic:0,oaked:0,light:0,social:0};
+  answers.forEach(a => Object.keys(a).forEach(k => { t[k] = (t[k]||0) + a[k]; }));
+  return wines.reduce((best,w) => {
+    const s  = -Object.keys(t).reduce((acc,k) => acc + Math.abs(t[k] - w.tags[k]*2), 0);
+    const bs = -Object.keys(t).reduce((acc,k) => acc + Math.abs(t[k] - best.tags[k]*2), 0);
+    return s > bs ? w : best;
+  }, wines[0]);
+}
+
+function bottleSVG(w) {
+  const bubbles = w.sparkling ? `
+    <circle cx="44" cy="200" r="1.5" fill="white" opacity="0.25"/>
+    <circle cx="50" cy="210" r="1.5" fill="white" opacity="0.25"/>
+    <circle cx="44" cy="220" r="1.5" fill="white" opacity="0.25"/>
+    <circle cx="56" cy="215" r="1.5" fill="white" opacity="0.25"/>
+    <circle cx="50" cy="225" r="1.5" fill="white" opacity="0.25"/>` : '';
+  return `<svg viewBox="0 0 120 280" width="100" height="240">
+    <rect x="46" y="10" width="28" height="18" rx="4" fill="${w.labelColor}" opacity="0.9"/>
+    <rect x="50" y="26" width="20" height="30" rx="2" fill="${w.bottleColor}"/>
+    <path d="M50 56 Q38 72 34 90 L86 90 Q82 72 70 56 Z" fill="${w.bottleColor}"/>
+    <rect x="34" y="88" width="52" height="150" rx="6" fill="${w.bottleColor}"/>
+    <ellipse cx="60" cy="238" rx="26" ry="6" fill="${w.bottleColor}" opacity="0.7"/>
+    <rect x="39" y="95" width="6" height="130" rx="3" fill="white" opacity="0.12"/>
+    <rect x="38" y="115" width="44" height="70" rx="4" fill="${w.labelColor}" opacity="0.95"/>
+    <rect x="40" y="117" width="40" height="66" rx="3" fill="none" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="60" y="138" text-anchor="middle" fill="white" font-size="5.5" font-family="Georgia,serif" font-weight="bold">SIRROMET</text>
+    <line x1="42" y1="141" x2="78" y2="141" stroke="white" stroke-width="0.5" opacity="0.4"/>
+    <text x="60" y="152" text-anchor="middle" fill="white" font-size="4.2" font-family="Georgia,serif">${w.labelText[0]}</text>
+    <text x="60" y="159" text-anchor="middle" fill="white" font-size="4.2" font-family="Georgia,serif">${w.labelText[1]}</text>
+    <text x="60" y="166" text-anchor="middle" fill="white" font-size="4.2" font-family="Georgia,serif">${w.labelText[2]}</text>
+    <line x1="42" y1="170" x2="78" y2="170" stroke="white" stroke-width="0.5" opacity="0.4"/>
+    <text x="60" y="178" text-anchor="middle" fill="white" font-size="4" font-family="Georgia,serif" opacity="0.7">QUEENSLAND</text>
+    ${bubbles}
+  </svg>`;
+}
+
+// ── STATE ──
+let state = {
+  screen: "start",
+  quizIdx: 0, quizSel: null, showFact: false,
+  diagIdx: 0, diagSel: null, diagAnswers: [],
+  result: null
+};
+
+function render() {
+  const app = document.getElementById("app");
+  const s = state;
+  const total = quizQs.length + diagQs.length;
+  const curStep = s.screen==="quiz" ? s.quizIdx : s.screen==="diagnosis" ? quizQs.length + s.diagIdx : total;
+  const pct = Math.round((curStep/total)*100);
+
+  const progressHTML = (label) => `
+    <div class="progress-wrap">
+      <div class="progress-top"><span>${label}</span><span>${pct}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-dots">${Array.from({length:total},(_,i)=>`<span class="${i<curStep?'done':''}"></span>`).join('')}</div>
+    </div>`;
+
+  if (s.screen === "start") {
+    app.innerHTML = `<div class="screen start">
+      <div class="emoji">🍷</div>
+      <div class="label">Sirromet Wines · Queensland, Australia</div>
+      <h1>Sirrometクイズ<br>& ワイン診断</h1>
+      <p>ツアーの復習クイズ（3問）のあと、<br>あなたにぴったりのワインを診断します（5問）。</p>
+      <div class="steps">
+        <div class="step-box"><span class="icon">🧠</span><span class="slabel">クイズ</span><span class="snum">3問</span></div>
+        <div class="step-box"><span class="icon">🍷</span><span class="slabel">ワイン診断</span><span class="snum">5問</span></div>
+        <div class="step-box"><span class="icon">🎁</span><span class="slabel">クチコミで</span><span class="snum">5% OFF</span></div>
+      </div>
+      <button class="btn-primary" onclick="go('quiz')">スタート 🌿</button>
+      <p class="note-sm">所要時間：約2分</p>
+    </div>`;
+    return;
+  }
+
+  if (s.screen === "quiz") {
+    const qq = quizQs[s.quizIdx];
+    const optsHTML = !s.showFact
+      ? qq.opts.map((o,i) => `<button class="opt-btn${s.quizSel===i?' selected':''}" onclick="quizSelect(${i})">${s.quizSel===i?'<span class="check">✓</span> ':''}${o}</button>`).join('')
+      : `<div class="fact-box">✨ ${qq.fact}</div>`;
+    const btnLabel = s.showFact ? (s.quizIdx+1>=quizQs.length ? "ワイン診断へ 🍷" : "次のクイズへ →") : "答えを見る ✨";
+    app.innerHTML = `<div class="screen">
+      ${progressHTML(`🧠 クイズ ${s.quizIdx+1}/3`)}
+      <div class="card">
+        <span class="badge green">🧠 Sirrometクイズ</span>
+        <h2>${qq.q}</h2>
+        ${qq.note ? `<div class="tip">${qq.note}</div>` : ''}
+        <div class="options">${optsHTML}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="quizNext()" ${s.quizSel===null?'disabled':''}>${btnLabel}</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (s.screen === "diagnosis") {
+    const dq = diagQs[s.diagIdx];
+    const isExpert = dq.cat === "expert";
+    const optsHTML = dq.opts.map((o,i) => `<button class="opt-btn${s.diagSel===i?' selected':''}" onclick="diagSelect(${i})">${s.diagSel===i?'<span class="check">✓</span> ':''}${o.label}</button>`).join('');
+    const btnLabel = s.diagIdx+1===diagQs.length ? "結果を見る 🍷" : "次へ →";
+    app.innerHTML = `<div class="screen">
+      ${progressHTML(`🍷 ワイン診断 ${s.diagIdx+1}/5`)}
+      <div class="card">
+        <span class="badge ${isExpert?'yellow':'green'}">${catLabels[dq.cat]||dq.cat}</span>
+        <h2>${dq.q}</h2>
+        ${dq.note ? `<div class="tip">${dq.note}</div>` : ''}
+        <div class="options">${optsHTML}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="diagNext()" ${s.diagSel===null?'disabled':''}>${btnLabel}</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (s.screen === "result") {
+    const w = s.result;
+    app.innerHTML = `<div class="screen">
+      <div class="result-header">
+        <div class="sublabel">YOUR WINE MATCH · QUEENSLAND, AUSTRALIA</div>
+        <h2>あなたにぴったりのワインは…</h2>
+      </div>
+      <div class="wine-card" style="border: 1.5px solid ${w.accent}55;">
+        <div class="bottle-area" style="background: linear-gradient(160deg,${w.bottleColor}40,${w.bottleColor}15);">
+          <div class="bottle-grad"></div>
+          ${bottleSVG(w)}
+        </div>
+        <div class="wine-info">
+          <div class="wine-type">${w.type.toUpperCase()} · SIRROMET WINES</div>
+          <div class="wine-name">${w.name}</div>
+          <div class="wine-copy">🌊 ${w.catchcopy}</div>
+          <div class="wine-desc">${w.description}</div>
+          <span class="wine-price">${w.price} AUD</span>
+        </div>
+      </div>
+      <div class="ta-cta">
+        <div class="ta-icon">🎁</div>
+        <div class="ta-title">クチコミを書いて</div>
+        <div class="ta-discount">5% OFF</div>
+        <div class="ta-note">投稿後、この画面をスタッフに見せると<br>割引が適用されます</div>
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+          <a href="${VELTRA_URL}" target="_blank" class="btn-ta" style="width:260px;text-align:center;">✈️ ベルトラに体験談を書く</a>
+          <a href="${GOOGLE_URL}" target="_blank" class="btn-ta" style="width:260px;text-align:center;background:linear-gradient(135deg,#4285F4,#34A853);">🗺️ Googleマップに口コミを書く</a>
+        </div>
+        <p style="color:#6a9878;font-size:11px;margin-top:12px;">ベルトラで予約の方はベルトラへ、それ以外の方はGoogleマップへ</p>
+      </div>
+      <div class="discount-badge">
+        <div class="db-note">クチコミを書いたら、この画面をスタッフへ</div>
+        <div class="db-num">5% OFF</div>
+        <div class="db-sub">セラードア・レストランでご利用いただけます</div>
+      </div>
+      <div class="btn-row-center">
+        <button class="btn-ghost" onclick="restart()">もう一度試す</button>
+        <a href="${w.url}" target="_blank" class="btn-buy">ワインを購入 →</a>
+      </div>
+    </div>`;
+    return;
+  }
+}
+
+function go(screen) { state.screen = screen; render(); }
+
+function quizSelect(i) { state.quizSel = i; render(); }
+
+function quizNext() {
+  if (state.quizSel === null) return;
+  if (!state.showFact) { state.showFact = true; render(); return; }
+  state.showFact = false; state.quizSel = null;
+  if (state.quizIdx + 1 >= quizQs.length) { state.screen = "diagnosis"; }
+  else { state.quizIdx++; }
+  render();
+}
+
+function diagSelect(i) { state.diagSel = i; render(); }
+
+function diagNext() {
+  if (state.diagSel === null) return;
+  const dq = diagQs[state.diagIdx];
+  state.diagAnswers.push(dq.opts[state.diagSel].s);
+  if (state.diagIdx + 1 >= diagQs.length) {
+    state.result = calcResult(state.diagAnswers);
+    state.screen = "result";
+  } else {
+    state.diagIdx++; state.diagSel = null;
+  }
+  render();
+}
+
+function restart() {
+  state = { screen:"start", quizIdx:0, quizSel:null, showFact:false, diagIdx:0, diagSel:null, diagAnswers:[], result:null };
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
